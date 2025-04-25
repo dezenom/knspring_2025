@@ -1,0 +1,20 @@
+{
+	"folders":
+	[
+		{
+			"path": "bin/..",
+			"file_exclude_patterns": ["*.sublime-project"]
+		}
+	],
+
+	"build_systems":
+	[
+		{
+			"name": "meson-build",
+			"working_dir": "${project_path}",
+			"cmd":"meson compile -C bin && start bin/main",
+			"selector": "source.c++",
+			"shell": true
+		}
+	]
+}
