@@ -1,8 +1,8 @@
 from PIL import Image
 import os
 
-inp = "res/scenes/game/1.png"
-outp = "res/scenes/foreground"
+inp = "res/scenes/game/0.png"
+outp = "res/scenes/environment"
 tile_width = 3200
 tile_height = 3200
 

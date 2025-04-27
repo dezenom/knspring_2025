@@ -13,9 +13,10 @@ Scene::Scene(kn::math::Vec2 pos,const std::string& folder_path){
     loadLayers(pos,folder_path);
 }
 
-void Scene::render(){
+void Scene::render(float bound){
     for(const auto& i:layers){
-        i->render();
+        if(i->rect.x < (bound+3200)&&i->rect.x >(bound-3200))
+            i->render();
     }
 }
 

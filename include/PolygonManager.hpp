@@ -14,9 +14,9 @@ public:
     // std::unordered_map< std::string,
     //                     std::vector<std::vector<kn::math::Vec2>> > groups;
 
-    bool edit;
+    bool not_save;
 
-    std::vector<std::vector<kn::math::Vec2>> polygons;
+    std::vector<std::vector<kn::math::Vec2>> polygons;std::unordered_map<std::string,std::vector<std::vector<kn::math::Vec2>>> chunked;
     int current_polygon;
     int current_vertex;
     std::string save_file;
@@ -41,5 +41,7 @@ public:
     void load(const std::string& file_path);
 
     // void collision(const std::string& group);
+
+    void clean();
 
 };

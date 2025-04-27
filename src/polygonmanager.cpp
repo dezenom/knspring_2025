@@ -1,29 +1,28 @@
 #include <kn/KrakenEngine.hpp>
 #include "PolygonManager.hpp"
 #include "utils.hpp"
+#include "globals.hpp"
 
-PolygonManager::PolygonManager(const std::string& file):save_file(file)
+PolygonManager::PolygonManager(const std::string& file):not_save(false),save_file(file)
 {
-    edit = true;
     current_polygon =-1;
     current_vertex = -1;
     load(save_file);
+    chunked = utils::chunk(polygons,chunksize);
 
     utils::print("PMREADY");
 }
 PolygonManager::~PolygonManager(){
-    save(save_file);
+    if(!not_save)save(save_file);
 }
 
 
 void PolygonManager::update(){
-    if(edit){
-        if (kn::input::isJustPressed("addPolygon"))addPolygon();
-        else if (kn::input::isJustPressed("delPolygon"))delPolygon();
-        if(polygons.size()){
-            if (kn::input::isJustPressed("leftClick"))addVertex();
-            else if (kn::input::isJustPressed("rightClick"))delVertex();
-        }
+    if (kn::input::isJustPressed("addPolygon"))addPolygon();
+    else if (kn::input::isJustPressed("delPolygon"))delPolygon();
+    if(polygons.size()){
+        if (kn::input::isJustPressed("leftClick"))addVertex();
+        else if (kn::input::isJustPressed("rightClick"))delVertex();
     }
 }
 
@@ -125,3 +124,8 @@ void PolygonManager::load(const std::string& file_path){
 // void PolygonManager::collision(const std::string& group){
 
 // }
+
+void PolygonManager::clean(){
+    polygons = {};
+    not_save = true;
+}

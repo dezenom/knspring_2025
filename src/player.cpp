@@ -24,6 +24,7 @@ Player::~Player(){
 
 void Player::update(){
     movement();
+    body = utils::getVertices(rect);
     animation();
 }
 void Player::render(){
@@ -32,14 +33,49 @@ void Player::render(){
 
 void Player::movement(){
     setDirection(kn::input::getDirection("left", "right","up","down"));
+    // if(direction.x!=0 || direction.y!=0){
+    //     setVector(velocity,kn::math::Vec2(kn::math::increment(velocity.x,accelaration,max_speed*direction.x),kn::math::increment(velocity.y,accelaration,max_speed*direction.y)));
+    // }else {
+    //    setVector(velocity,kn::math::Vec2(kn::math::increment(velocity.x,friction,0),kn::math::increment(velocity.y,friction,0)));
+    // }
+
+
     if(direction.x!=0 || direction.y!=0){
-        setVector(velocity,kn::math::Vec2(kn::math::increment(velocity.x,accelaration,max_speed*direction.x),kn::math::increment(velocity.y,accelaration,max_speed*direction.y)));
+        setVector(velocity,kn::math::Vec2(kn::math::increment(velocity.x,accelaration,max_speed*direction.x),0));
     }else {
-       setVector(velocity,kn::math::Vec2(kn::math::increment(velocity.x,friction,0),kn::math::increment(velocity.y,friction,0)));
+       setVector(velocity,kn::math::Vec2(kn::math::increment(velocity.x,friction,0),0));
     }
+
     // setVector(gravity_vector,kn::math::Vec2(kn::math::increment(gravity_vector.x,std::abs(gravity.x),max_gravity*gravity.x),kn::math::increment(gravity_vector.y,std::abs(gravity.y),max_gravity*gravity.y)));
     rect.x += velocity.x;
     rect.y += velocity.y;
+    rect.x += gravity_vector.x;
+    rect.y += gravity_vector.y;
+
+    if (gravity_vector.y < max_gravity)gravity_vector.y+=gravity.y;
+
+    if(kn::input::isJustPressed("up")){
+        gravity_vector.y = -jump_height;
+    }
+
+    chunks = {};
+    int cut[2] = {-3,-3};
+    int chunk[2] = {
+        static_cast<int>(std::floor(rect.x / chunksize.x)),//shouldnt be like this, just learning dont be dumb tho ahahahahaha
+        static_cast<int>(std::floor(rect.y / chunksize.y)),
+    };
+
+    for(int y=0;y<7;y++){
+        for(int x=0;x<7;x++){
+            int c[2] = {
+                chunk[0]+cut[0],
+                chunk[1]+cut[1]
+            };
+            chunks.push_back(utils::toStrChunk(c));
+            cut[0]++;
+        }
+        cut[1]++;
+    }
 
 }
 
@@ -88,6 +124,9 @@ void Player::setSpritesheet(const kn::Texture& texture){
 kn::Rect& Player::getRect(){
     return rect;
 }
+std::vector<kn::math::Vec2>& Player::getBody(){
+    return body;
+}
 kn::math::Vec2 Player::getDirection(){
     return direction;
 }
@@ -106,4 +145,81 @@ std::array<float, 4> Player::getMovement(){
 
 kn::Texture Player::getSpritesheet(){
     return spritesheet;
+}
+
+
+
+Coolcube::Coolcube(Player* p_entity,kn::Rect p_rect,kn::Color p_color , bool p_moving):rect(p_rect),entity(p_entity),color(p_color),moving(true),timer(0),direction(0,0),speed(5),
+range(30){
+
+}
+Coolcube::~Coolcube(){
+    entity = nullptr;
+}
+void Coolcube::update(){
+    controlPath();
+    movement();
+    controlCollision();
+}
+void Coolcube::render(){
+    kn::draw::rect(rect,color,100);
+}
+
+
+void Coolcube::controlPath(){
+    if(!path.empty()){
+        if(std::abs(rect.x-path.front().x)< range && std::abs(rect.y-path.front().y)< range){
+            path.pop();
+        }
+    }
+    if(moving){
+        if(!path.empty()){
+            if(timer>=3 && (std::abs(path.back().x-entity->getRect().x)> range || std::abs(path.back().y-entity->getRect().y)> range)){
+                timer = 0;
+                path.push({entity->getRect().x-10,entity->getRect().y-10});
+            }
+        }else {
+            if(timer>=3 && (std::abs(rect.x-entity->getRect().x)> range || std::abs(rect.y-entity->getRect().y)> range)){
+                timer = 0;
+                path.push({entity->getRect().x-10,entity->getRect().y-10});
+            }
+        }
+    }
+    if(kn::input::isJustPressed("rightClick")){
+        path = std::queue<kn::math::Vec2>();
+        path.push((kn::mouse::getPos()));
+        moving = false;
+    }
+    if(kn::input::isJustPressed("leftClick")){
+        moving=true;
+    }
+
+    if(timer >100 && !moving)moving = true;
+    if(path.size()>15)path = std::queue<kn::math::Vec2>();
+
+    timer++;
+}
+
+void Coolcube::controlCollision(){
+    if(!moving){
+        body = utils::getVertices(rect);
+        if(utils::SATCollision(entity->getBody(),body,mtv)){
+            entity->getRect().x-=mtv.x;
+            entity->getRect().y-=mtv.y;
+            entity->getBody() = utils::getVertices(entity->getRect());
+        }
+    }
+}
+
+void Coolcube::movement(){
+    if(!path.empty()){
+        const kn::math::Vec2 point (path.front().x-rect.x,path.front().y-rect.y);
+        float inc = (point.getLength())/30;
+        direction = kn::math::normalize(point);
+        if(rect.x!=(path.front().x) || rect.y!=(path.front().y)){
+            rect.x += speed * direction.x *inc;
+            rect.y += speed * direction.y *inc;
+        }
+    }
+
 }

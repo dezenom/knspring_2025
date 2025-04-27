@@ -1,15 +1,16 @@
 #include <kn/KrakenEngine.hpp>
 #include "utils.hpp"
+#include "globals.hpp"
 #include "Game.hpp"
 
 int main() {
-    kn::math::Vec2 screendimensions(1280,800);
     kn::window::init(screendimensions,"kraken-jam",true);
     kn::Event event;
     kn::time::Clock clock;
 
-    Game game("res/scenes/background","res/scenes/foreground");
+    Game game("res/scenes/environment");
 
+    // const float starttime = SDL_GetTicks();
 
     while (kn::window::isOpen()) {
         while (kn::window::pollEvent(event)) {
@@ -18,7 +19,7 @@ int main() {
         game.update();
         game.render();
         clock.tick(60);
-        // utils::outFPS();
+        // utils::outFPS(starttime);
 
     }
     kn::window::quit();

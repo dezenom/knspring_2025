@@ -15,7 +15,7 @@ class Scene
 {
 public:
     Scene(kn::math::Vec2 pos,const std::string& folder_path);
-    void render();
+    void render(float bound);
 
 private:
 

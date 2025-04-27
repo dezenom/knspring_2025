@@ -8,7 +8,7 @@ namespace fs = std::filesystem;
 
 namespace utils{
     struct minmax {
-        float min, max;
+        double min, max;
     };
 
     inline void print() {
@@ -26,11 +26,10 @@ namespace utils{
         }
     }
 
-    inline float starttime = SDL_GetTicks();
     inline float elapsedtime;
     inline int fps = 0;
 
-    inline void outFPS(const bool p_print = true){
+    inline void outFPS(const float starttime,const bool p_print = true){
             float time = (SDL_GetTicks()-starttime)/1000;
             ++fps;
             if(p_print){
@@ -175,6 +174,58 @@ namespace utils{
         }
         sort(result.begin(),result.end());
         return result;
+    }
+    inline std::unordered_map<std::string,std::vector<std::vector<kn::math::Vec2>>> chunk(const std::vector<std::vector<kn::math::Vec2>>& group,kn::math::Vec2 chunk_size){
+        print("------------------------------------------","chunking");
+
+        minmax xlimits;
+        xlimits.min = std::numeric_limits<float>::infinity();xlimits.max = -std::numeric_limits<float>::infinity();
+        minmax ylimits;
+        ylimits.min = std::numeric_limits<float>::infinity();ylimits.max = -std::numeric_limits<float>::infinity();
+        for(const auto& sub:group){
+            for(const kn::math::Vec2& vec:sub){
+                if(vec.x > xlimits.max)xlimits.max =vec.x;
+                if(vec.y > ylimits.max)ylimits.max =vec.y;
+                if(vec.x < xlimits.min)xlimits.min =vec.x;
+                if(vec.y < ylimits.min)ylimits.min =vec.y;
+            }
+        }
+
+        std::unordered_map<std::string,std::vector<std::vector<kn::math::Vec2>>> result;
+        int chunks[2] = {
+            static_cast<int>(std::floor(xlimits.max / chunk_size.x)) + 1,
+            static_cast<int>(std::floor(ylimits.max / chunk_size.y)) + 1
+        };
+
+        for (int row = -1; row < chunks[1]; ++row) {
+            for (int col = -1; col < chunks[0]; ++col) {
+                std::string chunkname = std::to_string(col) + "x" + std::to_string(row) + "y";
+                minmax xmm = {col * chunk_size.x,col * chunk_size.x + chunk_size.x};
+                minmax ymm = {row * chunk_size.y,row * chunk_size.y + chunk_size.y};
+
+                for (const auto& sub : group) {
+                    minmax sxmm = {-std::numeric_limits<float>::infinity(),std::numeric_limits<float>::infinity()};
+                    minmax symm = {-std::numeric_limits<float>::infinity(),std::numeric_limits<float>::infinity()};
+                    for (const kn::math::Vec2& vec : sub) {
+                        if(vec.x > sxmm.max)sxmm.max =vec.x;
+                        if(vec.y > symm.max)symm.max =vec.y;
+                        if(vec.x < sxmm.min)sxmm.min =vec.x;
+                        if(vec.y < symm.min)symm.min =vec.y;
+                    }
+                    if (overlap(sxmm,xmm)&&overlap(symm,ymm)) {
+                        result[chunkname].push_back(sub);
+                        // print(chunkname);
+                    }
+                }
+            }
+        }
+        print("finished chunking!!!!!!!!!!!!!");
+
+        return result;
+    }
+
+    inline std::string toStrChunk(int chunk[2]){
+        return std::to_string(chunk[0]) + "x" + std::to_string(chunk[1]) + "y";
     }
 
 }//namespace utils
