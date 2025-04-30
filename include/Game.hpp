@@ -17,6 +17,9 @@ public:
     void render();
     void update();
 
+    bool collision(const std::vector<kn::math::Vec2>& body,
+                         const std::unordered_map<std::string, std::vector<std::vector<kn::math::Vec2>>>& cpolygons,
+                         const std::vector<std::string>& chunks);
 private:
     Scene environment;
 
@@ -25,6 +28,12 @@ private:
     PolygonManager walls;
     PolygonManager xbounds;
     PolygonManager ybounds;
+
+    PolygonManager dmg;
+    kn::math::Vec2 check;
+    PolygonManager checks;
+    PolygonManager door;
+
     kn::math::Vec2 mtv;
 
     Player player;

@@ -3,7 +3,7 @@
 
 Player::Player(const std::string spritesheet_filepath,const kn::math::Vec2 pos,const kn::math::Vec2 size)
 :rect(pos,size) , spritesheet(spritesheet_filepath), spritesheet_surface(IMG_Load("res/images/animations/player.png")),
-anim_index(0), anim_status(0), anim_speed(60/anim_src_rect.w*8),anim_src_rect({0,64},size*2),anim_mask(utils::generateAlphaMask(spritesheet_surface))
+anim_index(0), anim_status(2),anim_src_rect({0,0},size*2),anim_speed(60/anim_src_rect.w*8)
 {
     setDirection();
     setVector(velocity);
@@ -12,6 +12,7 @@ anim_index(0), anim_status(0), anim_speed(60/anim_src_rect.w*8),anim_src_rect({0
     // still doesnt work, i should learn more on this
     // kn::Texture t(spritesheet_filepath);
     // setSpritesheet(t);
+    onground = false;
 
     utils::print(spritesheet.getSize());
 
@@ -40,13 +41,16 @@ void Player::movement(){
     // }
 
 
-    if(direction.x!=0 || direction.y!=0){
+    if(direction.x!=0){
+        anim_status = 1;
         setVector(velocity,kn::math::Vec2(kn::math::increment(velocity.x,accelaration,max_speed*direction.x),0));
     }else {
+        anim_status = 0;
        setVector(velocity,kn::math::Vec2(kn::math::increment(velocity.x,friction,0),0));
     }
+    if (!onground)anim_status = 2;
 
-    // setVector(gravity_vector,kn::math::Vec2(kn::math::increment(gravity_vector.x,std::abs(gravity.x),max_gravity*gravity.x),kn::math::increment(gravity_vector.y,std::abs(gravity.y),max_gravity*gravity.y)));
+    // // setVector(gravity_vector,kn::math::Vec2(kn::math::increment(gravity_vector.x,std::abs(gravity.x),max_gravity*gravity.x),kn::math::increment(gravity_vector.y,std::abs(gravity.y),max_gravity*gravity.y)));
     rect.x += velocity.x;
     rect.y += velocity.y;
     rect.x += gravity_vector.x;
@@ -56,6 +60,7 @@ void Player::movement(){
 
     if(kn::input::isJustPressed("up")){
         gravity_vector.y = -jump_height;
+        onground = false;
     }
 
     chunks = {};
@@ -84,13 +89,11 @@ void Player::animation(){
     if(anim_index>anim_src_rect.w){
         anim_src_rect.x += anim_src_rect.w;
         anim_index = 0;
-    }if(anim_src_rect.x>spritesheet.getSize().x){anim_index=0;anim_src_rect.x=0;}
-
-    if(utils::isRegionTransparent(anim_mask,spritesheet.getSize().x,anim_src_rect)){
-        anim_src_rect.x=0;
-        anim_index = 0;
     }
 
+    anim_src_rect.y = 0;
+    anim_src_rect.y = anim_src_rect.h * anim_status;
+    if(anim_src_rect.right()>=spritesheet.getSize().x){anim_index=0;anim_src_rect.x=0;}
 }
 
 // setters
@@ -185,22 +188,27 @@ void Coolcube::controlPath(){
             }
         }
     }
+    if(!moving){
+        if(timer%3 == 0)path.push(kn::mouse::getPos());
+    }
     if(kn::input::isJustPressed("rightClick")){
         path = std::queue<kn::math::Vec2>();
         path.push((kn::mouse::getPos()));
         moving = false;
+        timer = 0;
     }
     if(kn::input::isJustPressed("leftClick")){
         moving=true;
     }
 
-    if(timer >100 && !moving)moving = true;
+    if(timer >600 && !moving)moving = true;
     if(path.size()>15)path = std::queue<kn::math::Vec2>();
 
     timer++;
 }
 
 void Coolcube::controlCollision(){
+    mtv = {0,0};
     if(!moving){
         body = utils::getVertices(rect);
         if(utils::SATCollision(entity->getBody(),body,mtv)){
@@ -209,6 +217,10 @@ void Coolcube::controlCollision(){
             entity->getBody() = utils::getVertices(entity->getRect());
         }
     }
+    if(mtv.y>0 and entity->getGravityVector().y > 0){
+        entity->getGravityVector().y = 0;
+        entity->onground = true;
+;    }
 }
 
 void Coolcube::movement(){

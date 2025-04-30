@@ -18,10 +18,10 @@ public:
     void setVector(kn::math::Vec2& reference,kn::math::Vec2 vector = kn::math::Vec2(0,0));
     void setGravity(kn::math::Vec2 vector = kn::math::Vec2 (0,1));
     void setMovement(float p_accelaration = 1,
-                     float p_friction = 1,
+                     float p_friction = 3,
                      float p_max_speed = 10.0,
-                     float p_jump_height =15.0,
-                     float p_max_gravity = 5.0);
+                     float p_jump_height =10.0,
+                     float p_max_gravity = 15.0);
     void setSpritesheet(const kn::Texture& texture);
 
     kn::Rect& getRect();
@@ -34,6 +34,9 @@ public:
     kn::Texture getSpritesheet();
 
     std::vector<std::string> chunks;
+
+    bool onground;
+    int status;
 
 private:
 
@@ -58,9 +61,8 @@ private:
 
     int anim_index;
     int anim_status;
-    int anim_speed;
     kn::Rect anim_src_rect;
-    std::vector<bool> anim_mask;
+    int anim_speed;
     void animation();
 };
 
